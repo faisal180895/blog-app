@@ -4,13 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint app components lib types",
     "postinstall": "prisma generate"
   },
   "engines": {
-    "node": ">=18"
+    "node": "24.x"
+  },
+  "overrides": {
+    "node-domexception": "file:./patches/node-domexception"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

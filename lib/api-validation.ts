@@ -3,8 +3,6 @@
  * Centralized functions to validate and sanitize API inputs
  */
 
-import { z } from "zod"
-
 /**
  * Sanitize HTML content to prevent XSS attacks
  * Removes potentially dangerous attributes and tags

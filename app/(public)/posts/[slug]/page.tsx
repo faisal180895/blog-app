@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
         creator: post.author?.name || "Editorial Studio",
       },
     }
-  } catch (error) {
+  } catch {
     return { title: "Post" }
   }
 }
