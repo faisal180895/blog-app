@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  turbopack: {
+    resolveAlias: {
+      "node-domexception": "./patches/node-domexception/index.js",
+    },
+  },
   images: {
     remotePatterns: [
       {
