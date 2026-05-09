@@ -10,12 +10,13 @@
     "postinstall": "prisma generate"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": "20.x"
   },
   "overrides": {
     "node-domexception": "file:./patches/node-domexception",
     "effect": "3.21.2",
-    "postcss": "8.5.14"
+    "postcss": "8.5.14",
+    "uuid": "11.1.0"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
