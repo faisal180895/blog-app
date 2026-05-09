@@ -113,7 +113,7 @@ function renderNode(node: RichTextNode, index: number): React.ReactNode {
             alt={alt}
             fill
             className="object-cover"
-            sizes="100vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 100vw"
           />
         </div>
       )

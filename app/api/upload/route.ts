@@ -118,7 +118,9 @@ export async function POST(req: Request) {
       { status: 201 }
     )
   } catch (error) {
-    console.error("[Upload POST]", error)
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Upload POST]", error instanceof Error ? error.message : error)
+    }
     return NextResponse.json(
       { error: "Unable to upload file. Check Cloudinary configuration." },
       { status: 500 }

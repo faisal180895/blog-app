@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { PostContent } from "@/components/blog/post-content"
 import { ReadingProgress } from "@/components/blog/reading-progress"
@@ -10,6 +11,47 @@ import { Clock, Calendar } from "lucide-react"
 
 interface PostPageProps {
   params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
+  const { slug } = await params
+
+  try {
+    const post = await prisma.post.findUnique({
+      where: { slug },
+      select: {
+        title: true,
+        excerpt: true,
+        coverImage: true,
+        author: { select: { name: true } },
+        published: true,
+      },
+    })
+
+    if (!post || !post.published) {
+      return { title: "Post Not Found" }
+    }
+
+    return {
+      title: post.title,
+      description: post.excerpt || "Read this story",
+      openGraph: {
+        title: post.title,
+        description: post.excerpt || "Read this story",
+        images: post.coverImage ? [{ url: post.coverImage, width: 1200, height: 630 }] : [],
+        type: "article",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: post.title,
+        description: post.excerpt || "Read this story",
+        images: post.coverImage ? [post.coverImage] : [],
+        creator: post.author?.name || "Editorial Studio",
+      },
+    }
+  } catch (error) {
+    return { title: "Post" }
+  }
 }
 
 export default async function PostPage({ params }: PostPageProps) {
@@ -60,7 +102,7 @@ export default async function PostPage({ params }: PostPageProps) {
               {post.excerpt ? (
                 <p className="max-w-3xl text-lg leading-8 text-[color:var(--muted)]">{post.excerpt}</p>
               ) : null}
-              
+
               {/* Metadata */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-[color:var(--muted)] border-t border-[color:var(--border)] pt-4 mt-4">
                 <p className="font-medium">

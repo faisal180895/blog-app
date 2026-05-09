@@ -44,7 +44,9 @@ export async function GET() {
 
     return successResponse(posts)
   } catch (error) {
-    console.error("[Posts GET]", error)
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Posts GET]", error instanceof Error ? error.message : error)
+    }
     return errorResponse("Failed to fetch posts", 500)
   }
 }
@@ -111,7 +113,9 @@ export async function POST(req: Request) {
 
     return successResponse(post, 201)
   } catch (error) {
-    console.error("[Posts POST]", error)
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Posts POST]", error instanceof Error ? error.message : error)
+    }
     return errorResponse("Failed to create post", 500)
   }
 }

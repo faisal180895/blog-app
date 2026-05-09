@@ -6,10 +6,22 @@ import {
   validationErrorResponse,
   errorResponse,
 } from "@/lib/api-response"
+import { sanitizeInput } from "@/lib/api-validation"
 import { z } from "zod"
 
+interface CommentItem {
+  id: string
+  text: string
+  createdAt: Date
+  userId: string
+  user: {
+    name: string | null
+    image: string | null
+  }
+}
+
 const commentSchema = z.object({
-  text: z.string().trim().min(1, "Comment cannot be empty"),
+  text: z.string().trim().min(1, "Comment cannot be empty").max(500, "Comment is too long"),
   postId: z.string().trim().min(1, "Post ID is required"),
   parentId: z.string().trim().optional().nullable(),
 })
@@ -48,7 +60,9 @@ export async function GET(req: Request) {
 
     return successResponse(comments)
   } catch (error) {
-    console.error("[Comments GET]", error)
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Comments GET]", error instanceof Error ? error.message : error)
+    }
     return errorResponse("Failed to fetch comments", 500)
   }
 }
@@ -102,7 +116,7 @@ export async function POST(req: Request) {
 
     const comment = await prisma.comment.create({
       data: {
-        text: parsed.data.text,
+        text: sanitizeInput(parsed.data.text),
         postId: parsed.data.postId,
         parentId: parsed.data.parentId || null,
         userId: session.user.id,
@@ -112,9 +126,32 @@ export async function POST(req: Request) {
       },
     })
 
-    return successResponse(comment, 201)
+    // Type-safe validation
+    if (!comment.user) {
+      if (process.env.NODE_ENV === "development") {
+        console.error(
+          `[Comments] Created comment ${comment.id} without user relationship`
+        )
+      }
+      return errorResponse("Failed to create comment", 500)
+    }
+
+    const response: CommentItem = {
+      id: comment.id,
+      text: comment.text,
+      createdAt: comment.createdAt,
+      userId: comment.userId,
+      user: {
+        name: comment.user.name,
+        image: comment.user.image,
+      },
+    }
+
+    return successResponse(response, 201)
   } catch (error) {
-    console.error("[Comments POST]", error)
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Comments POST]", error instanceof Error ? error.message : error)
+    }
     return errorResponse("Failed to create comment", 500)
   }
 }

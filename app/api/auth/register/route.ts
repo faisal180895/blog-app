@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { sanitizeInput } from "@/lib/api-validation"
 import {
   successResponse,
   conflictResponse,
@@ -8,9 +9,9 @@ import {
 } from "@/lib/api-response"
 
 const registerSchema = z.object({
-  name: z.string().trim().optional().nullable(),
-  email: z.string().trim().email("Enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().trim().min(1, "Name is required").max(100, "Name is too long").optional().nullable(),
+  email: z.string().trim().email("Enter a valid email address").toLowerCase(),
+  password: z.string().min(8, "Password must be at least 8 characters").max(100, "Password is too long"),
   role: z
     .string()
     .optional()
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
 
   const user = await prisma.user.create({
     data: {
-      name: name?.trim() || null,
+      name: name ? sanitizeInput(name) : null,
       email,
       password: hashedPassword,
       role,

@@ -36,14 +36,14 @@ export async function GET(req: Request) {
       prisma.like.count({ where: { postId } }),
       session?.user?.id
         ? prisma.like.findUnique({
-            where: {
-              userId_postId: {
-                userId: session.user.id,
-                postId,
-              },
+          where: {
+            userId_postId: {
+              userId: session.user.id,
+              postId,
             },
-            select: { id: true },
-          })
+          },
+          select: { id: true },
+        })
         : null,
     ])
 
@@ -52,7 +52,9 @@ export async function GET(req: Request) {
       liked: Boolean(existingLike),
     })
   } catch (error) {
-    console.error("[Likes GET]", error)
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Likes GET]", error instanceof Error ? error.message : error)
+    }
     return errorResponse("Failed to fetch likes", 500)
   }
 }
@@ -110,7 +112,9 @@ export async function POST(req: Request) {
       throw error
     }
   } catch (error) {
-    console.error("[Likes POST]", error)
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Likes POST]", error instanceof Error ? error.message : error)
+    }
     return errorResponse("Failed to like post", 500)
   }
 }
@@ -157,7 +161,9 @@ export async function DELETE(req: Request) {
 
     return successResponse({ liked: false })
   } catch (error) {
-    console.error("[Likes DELETE]", error)
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Likes DELETE]", error instanceof Error ? error.message : error)
+    }
     return errorResponse("Failed to unlike post", 500)
   }
 }

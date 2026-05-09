@@ -181,10 +181,11 @@ export function BentoGridClient({ featuredPosts }: BentoGridClientProps) {
                   alt={lead.title}
                   fill
                   className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   priority
                 />
               ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-accent to-accent-strong" />
+              <div className="absolute inset-0 bg-gradient-to-br from-accent to-accent-strong" />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

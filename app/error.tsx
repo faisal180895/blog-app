@@ -12,8 +12,15 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error(error)
+    // Only log errors in development to prevent exposing sensitive info
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Error Boundary]", error)
+    }
   }, [error])
+
+  const displayMessage = process.env.NODE_ENV === "development"
+    ? error.message
+    : "An unexpected error occurred. Please try again."
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
@@ -25,7 +32,10 @@ export default function Error({
         </div>
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-foreground">Something went wrong</h1>
-          <p className="text-muted text-sm leading-6">{error.message || "An unexpected error occurred. Please try again or contact support if the problem persists."}</p>
+          <p className="text-muted text-sm leading-6">{displayMessage}</p>
+          {process.env.NODE_ENV === "development" && error.digest && (
+            <p className="text-xs text-muted/50">Error ID: {error.digest}</p>
+          )}
         </div>
         <div className="flex gap-3 pt-4">
           <button

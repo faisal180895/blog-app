@@ -11,8 +11,8 @@ const requestSchema = z.object({
   prompt: z.string().trim().max(1000).optional(),
 });
 
-if (!apiKey) {
-  console.warn("Google GenAI API key is not configured. AI generation will return 501 errors.");
+if (!apiKey && process.env.NODE_ENV === "development") {
+  console.warn("[AI] GOOGLE_API_KEY not configured. AI generation will return 501 errors.");
 }
 
 const ai = new GoogleGenAI({ apiKey });
@@ -74,35 +74,55 @@ ${excerpt}
 ` : ""}`.trim();
 
     // Call the Gemini API using the fast and smart flash model
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: modelPrompt,
-    });
-
-    const responseData = response as unknown as {
-      text?: string
-      outputText?: string
-      contents?: unknown
+    interface GeminiCandidate {
+      content?: {
+        parts?: Array<{ text?: string }>
+      }
+    }
+    interface GeminiResponse {
+      candidates?: GeminiCandidate[]
     }
 
-    const contentItems = responseData.contents
-    const textFromContents = Array.isArray(contentItems)
-      ? String((contentItems[0] as { text?: unknown })?.text ?? "")
-      : ""
+    let response
+    try {
+      response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: modelPrompt,
+      })
+    } catch (apiError) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[AI] Generation error:", apiError instanceof Error ? apiError.message : apiError)
+      }
+      return Response.json(
+        { error: "AI service temporarily unavailable. Try again later." },
+        { status: 503 }
+      )
+    }
 
-    const text =
-      responseData.text ||
-      responseData.outputText ||
-      textFromContents ||
-      ""
+    if (!response) {
+      return Response.json(
+        { error: "AI service returned invalid response." },
+        { status: 502 }
+      )
+    }
+
+    const typedResponse = response as GeminiResponse
+    const firstCandidate = typedResponse.candidates?.[0]
+    const firstPart = firstCandidate?.content?.parts?.[0]
+    const text = firstPart?.text?.trim() || ""
 
     if (!text) {
-      return Response.json({ error: "AI returned no usable text." }, { status: 502 });
+      return Response.json(
+        { error: "AI generated no text. Try a different title or prompt." },
+        { status: 502 }
+      )
     }
 
     return Response.json({ text });
   } catch (error) {
-    console.error("Gemini Generation Error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("[AI] Unexpected error:", error instanceof Error ? error.message : error)
+    }
     return Response.json({ error: "Failed to generate text" }, { status: 500 });
   }
 }

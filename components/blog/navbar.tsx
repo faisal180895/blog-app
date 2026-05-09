@@ -28,12 +28,13 @@ export function Navbar() {
                 <Link
                     href="/"
                     className="text-2xl font-bold leading-none bg-gradient-to-r from-accent to-accent-strong bg-clip-text text-transparent transition-transform hover:scale-105"
+                    aria-label="Editorial Studio - Home"
                 >
                     Editorial Studio
                 </Link>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden flex-wrap items-center gap-2 text-sm font-medium text-[color:var(--muted)] md:flex">
+                <nav className="hidden flex-wrap items-center gap-2 text-sm font-medium text-[color:var(--muted)] md:flex" aria-label="Main navigation">
                     {navItems.map((item) => {
                         const active = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
                         return (
@@ -41,9 +42,10 @@ export function Navbar() {
                                 key={item.href}
                                 href={item.href}
                                 className={`px-4 py-2 rounded-lg transition-colors ${active
-                                        ? "bg-accent text-white"
-                                        : "hover:text-foreground hover:bg-white/50"
+                                    ? "bg-accent text-white"
+                                    : "hover:text-foreground hover:bg-white/50"
                                     }`}
+                                aria-current={active ? "page" : undefined}
                             >
                                 {item.label}
                             </Link>
@@ -99,6 +101,9 @@ export function Navbar() {
                     type="button"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                     className="md:hidden p-2 rounded-lg hover:bg-white/50 transition-colors"
+                    aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                    aria-expanded={mobileMenuOpen}
+                    aria-controls="mobile-nav"
                 >
                     {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
@@ -107,9 +112,11 @@ export function Navbar() {
             {/* Mobile Navigation */}
             {mobileMenuOpen && (
                 <motion.nav
+                    id="mobile-nav"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="md:hidden border-t border-[color:var(--border)] px-4 py-3 space-y-2"
+                    aria-label="Mobile navigation"
                 >
                     {navItems.map((item) => (
                         <Link

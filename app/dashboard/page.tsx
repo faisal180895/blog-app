@@ -12,19 +12,55 @@ export default async function DashboardPage() {
   }
 
   const [postsCount, publishedCount, commentsCount, recentPosts, totalLikes] = await Promise.all([
-    prisma.post.count({ where: { authorId: session.user.id } }),
-    prisma.post.count({ where: { authorId: session.user.id, published: true } }),
-    prisma.comment.count({ where: { userId: session.user.id } }),
-    prisma.post.findMany({
-      where: { authorId: session.user.id },
-      orderBy: { updatedAt: "desc" },
-      take: 5,
-      include: { _count: { select: { comments: true, likes: true } } },
-    }),
-    prisma.post.findMany({
-      where: { authorId: session.user.id },
-      select: { _count: { select: { likes: true } } },
-    }).then((posts) => posts.reduce((sum, post) => sum + post._count.likes, 0)),
+    prisma.post
+      .count({ where: { authorId: session.user.id } })
+      .catch((error) => {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[Dashboard] Failed to count total posts:", error)
+        }
+        return 0
+      }),
+    prisma.post
+      .count({ where: { authorId: session.user.id, published: true } })
+      .catch((error) => {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[Dashboard] Failed to count published posts:", error)
+        }
+        return 0
+      }),
+    prisma.comment
+      .count({ where: { userId: session.user.id } })
+      .catch((error) => {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[Dashboard] Failed to count comments:", error)
+        }
+        return 0
+      }),
+    prisma.post
+      .findMany({
+        where: { authorId: session.user.id },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+        include: { _count: { select: { comments: true, likes: true } } },
+      })
+      .catch((error) => {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[Dashboard] Failed to fetch recent posts:", error)
+        }
+        return []
+      }),
+    prisma.post
+      .findMany({
+        where: { authorId: session.user.id },
+        select: { _count: { select: { likes: true } } },
+      })
+      .then((posts) => posts.reduce((sum, post) => sum + post._count.likes, 0))
+      .catch((error) => {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[Dashboard] Failed to count total likes:", error)
+        }
+        return 0
+      }),
   ])
 
   const stats = [

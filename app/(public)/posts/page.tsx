@@ -1,8 +1,19 @@
 import Link from "next/link"
+import type { Metadata } from "next"
 import { Search } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
+
+export const metadata: Metadata = {
+  title: "All Posts - Editorial Studio",
+  description: "Browse all published stories on Editorial Studio. Search and discover engaging content from our community of writers.",
+  openGraph: {
+    title: "All Posts - Editorial Studio",
+    description: "Browse all published stories on Editorial Studio.",
+    type: "website",
+  },
+}
 
 interface PostsPageProps {
   searchParams: Promise<{ q?: string }>
@@ -17,11 +28,11 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
           published: true,
           ...(query
             ? {
-                OR: [
-                  { title: { contains: query, mode: "insensitive" as const } },
-                  { excerpt: { contains: query, mode: "insensitive" as const } },
-                ],
-              }
+              OR: [
+                { title: { contains: query, mode: "insensitive" as const } },
+                { excerpt: { contains: query, mode: "insensitive" as const } },
+              ],
+            }
             : {}),
         },
         orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],

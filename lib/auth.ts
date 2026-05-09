@@ -76,15 +76,23 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role
       }
 
-      if (token.email && !token.role) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email },
-          select: { id: true, role: true },
-        })
+      // Only query if BOTH id AND role are missing to avoid N+1 queries
+      if (token.email && !token.role && !token.id) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email },
+            select: { id: true, role: true },
+          })
 
-        if (dbUser) {
-          token.id = dbUser.id
-          token.role = dbUser.role
+          if (dbUser) {
+            token.id = dbUser.id
+            token.role = dbUser.role
+          }
+        } catch (error) {
+          // Fail gracefully - role will be fetched on next session
+          if (process.env.NODE_ENV === "development") {
+            console.error("[Auth] JWT callback error:", error instanceof Error ? error.message : error)
+          }
         }
       }
 
